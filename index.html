@@ -1,0 +1,559 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blood Bowl Flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --card-bg: #1a1a1a;
+    --gold: #c9a84c;
+    --gold-light: #e8c96c;
+    --red: #b81c1c;
+    --red-bright: #e52222;
+    --text: #f0ead8;
+    --text-muted: #8a8070;
+    --border: #2e2820;
+    --glow: rgba(201, 168, 76, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184,28,28,0.12) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+    position: relative;
+  }
+
+  .logo-line {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+
+  .skull { font-size: 28px; filter: sepia(1) saturate(2) hue-rotate(-20deg); }
+
+  h1 {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(28px, 6vw, 52px);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold), #a07830);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .subtitle {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .divider {
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 10px auto 0;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 28px;
+    max-width: 700px;
+  }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .filter-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0d0d0d;
+    font-weight: 700;
+  }
+
+  /* Progress */
+  .progress-bar-wrap {
+    width: 100%;
+    max-width: 580px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red), var(--gold));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  /* Card */
+  .card-scene {
+    perspective: 1200px;
+    width: 100%;
+    max-width: 580px;
+    margin-bottom: 32px;
+    cursor: pointer;
+  }
+
+  .card-inner {
+    position: relative;
+    width: 100%;
+    transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  .card-inner.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.05);
+  }
+
+  .card-face.back {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    transform: rotateY(180deg);
+  }
+
+  .card-header {
+    padding: 18px 24px 14px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    background: linear-gradient(135deg, #1f1a12, #181410);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-category {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+    opacity: 0.8;
+  }
+
+  .card-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(22px, 5vw, 36px);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .badge-active { background: rgba(229, 34, 34, 0.2); border: 1px solid rgba(229,34,34,0.5); color: #ff7070; }
+  .badge-passive { background: rgba(60, 100, 200, 0.2); border: 1px solid rgba(60,100,200,0.5); color: #8aacff; }
+
+  .card-body {
+    padding: 24px;
+    background: var(--card-bg);
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .card-face.front .card-body {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .flip-hint {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.6;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.9; }
+  }
+
+  .flip-hint svg {
+    width: 14px; height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  .description {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    max-width: 520px;
+  }
+
+  .card-decoration {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-size: 40px;
+    opacity: 0.04;
+    font-family: 'Black Han Sans', sans-serif;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Revealed back card glow */
+  .card-face.back .card-header {
+    background: linear-gradient(135deg, #12181a, #101418);
+    border-bottom-color: rgba(60,100,200,0.3);
+  }
+
+  .card-face.back .card-body {
+    background: #111519;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 580px;
+    width: 100%;
+  }
+
+  .btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    border-radius: 2px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+  }
+
+  .btn-prev {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .btn-prev:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+  }
+
+  .btn-next {
+    flex: 1;
+    background: linear-gradient(135deg, var(--red), #8a1010);
+    color: var(--text);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(184,28,28,0.4);
+  }
+
+  .btn-next::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn-next:hover::after { opacity: 1; }
+  .btn-next:hover { box-shadow: 0 6px 24px rgba(184,28,28,0.6); transform: translateY(-1px); }
+  .btn-next:active { transform: translateY(0); }
+
+  .btn-shuffle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    flex-shrink: 0;
+    padding: 12px;
+  }
+
+  .btn-shuffle:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .btn-shuffle svg {
+    display: block;
+    width: 16px; height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  /* Counter badge */
+  .count-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: -20px;
+    margin-bottom: 20px;
+  }
+
+  /* Transitions */
+  .card-slide-enter { animation: slideIn 0.35s ease forwards; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .card-slide-enter-back { animation: slideInBack 0.35s ease forwards; }
+  @keyframes slideInBack {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-line">
+    <span class="skull">☠</span>
+    <h1>Blood Bowl</h1>
+    <span class="skull">☠</span>
+  </div>
+  <div class="subtitle">Skills & Traits Flashcards</div>
+  <div class="divider"></div>
+</header>
+
+<div class="filter-bar" id="filterBar"></div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">1 / 1</div>
+</div>
+
+<div class="card-scene" id="cardScene" onclick="flipCard()">
+  <div class="card-inner" id="cardInner">
+    <!-- Front -->
+    <div class="card-face front">
+      <div class="card-header">
+        <div>
+          <div class="card-category" id="frontCategory">Category</div>
+          <div class="card-title" id="frontTitle">Skill Name</div>
+        </div>
+        <div class="badge" id="frontBadge">Active</div>
+      </div>
+      <div class="card-body">
+        <div class="flip-hint">
+          <svg viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          Click to reveal
+        </div>
+        <div class="card-decoration" id="cardDeco">★</div>
+      </div>
+    </div>
+    <!-- Back -->
+    <div class="card-face back">
+      <div class="card-header">
+        <div>
+          <div class="card-category" id="backCategory">Category</div>
+          <div class="card-title" id="backTitle">Skill Name</div>
+        </div>
+        <div class="badge" id="backBadge">Active</div>
+      </div>
+      <div class="card-body">
+        <div class="description" id="backDesc"></div>
+        <div class="card-decoration" id="backDeco">★</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="count-badge" id="countBadge"></div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="navigate(-1)">← Prev</button>
+  <button class="btn btn-next" onclick="navigate(1)">Next Card →</button>
+  <button class="btn btn-shuffle" onclick="shuffle()" title="Shuffle">
+    <svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+  </button>
+</div>
+
+<script>
+const cards = [
+  // AGILITY
+  { category: "Agility", name: "Catch", type: "Active", desc: "This player may re-roll any failed Agility Test when attempting to Catch the ball." },
+  { category: "Agility", name: "Diving Catch", type: "Active", desc: "This player may attempt to Catch the ball if it lands in a square in their Tackle Zone as a result of a Pass, Throw-in or Kick-off (not Bounce). Additionally, may apply a +1 modifier to Agility Test when catching as part of a Pass Action if in the target square." },
+  { category: "Agility", name: "Diving Tackle", type: "Active", desc: "When an opposition player attempts to leave this player's Tackle Zone via Dodge, Leap or Jump, after all modifiers and re-rolls, this player may apply a -2 modifier to the opposition's Agility Test and place themselves Prone in the vacated square. Only one player with this Skill may use it at a time." },
+  { category: "Agility", name: "Dodge", type: "Active", desc: "Once per Turn, may re-roll a single Agility Test when attempting to Dodge. Also impacts the Stumble result when an opposition player performs a Block Action against this player." },
+  { category: "Agility", name: "Defensive", type: "Active", desc: "During your opponent's Turns, opposition players Marked by this player cannot use the Guard or Put the Boot In Skills." },
+  { category: "Agility", name: "Hit and Run", type: "Active", desc: "After performing a Block or Stab Special Action, may immediately move one free square ignoring Tackle Zones (if still Standing), ending not Marked or Marking any opposition players. Cannot also have Frenzy." },
+  { category: "Agility", name: "Jump Up", type: "Active", desc: "Can stand up for free without spending 3 movement squares. Also, a Prone player may declare a Block Action; on a passed Agility Test (+1 modifier) they stand up and block. On failure, remains Prone and activation ends." },
+  { category: "Agility", name: "Leap", type: "Active", desc: "May attempt to Leap over a single adjacent square like Jumping, but may reduce negative modifiers by 1 (minimum -1). Cannot also have Pogo Trait." },
+  { category: "Agility", name: "Safe Pair of Hands", type: "Active", desc: "If Knocked Down, Fell Over, or Placed Prone while holding the ball, may place the ball in any adjacent unoccupied square instead of Bouncing it." },
+  { category: "Agility", name: "Sidestep", type: "Active", desc: "Whenever Pushed Back, this player's Coach may choose any adjacent unoccupied square instead of the opposing Coach choosing. Cannot be used if no adjacent unoccupied squares exist." },
+  { category: "Agility", name: "Sprint", type: "Active", desc: "When performing a Move Action, may attempt to Rush one additional time beyond the normal limit." },
+  { category: "Agility", name: "Sure Feet", type: "Active", desc: "Once per Turn, may re-roll a single D6 when attempting to Rush." },
+
+  // DEVIOUS
+  { category: "Devious", name: "Dirty Player", type: "Active", desc: "When performing a Foul Action, may apply a +1 modifier to either the Armour Roll or Injury Roll (even after the roll)." },
+  { category: "Devious", name: "Eye Gouge", type: "Active", desc: "When an opposition player is Pushed Back by this player, they cannot provide Offensive or Defensive Assists until after they are next activated." },
+  { category: "Devious", name: "Fumblerooski", type: "Active", desc: "While performing a Move Action with the ball, may choose to place the ball on the ground in any square they move out of. This does not cause a Turnover." },
+  { category: "Devious", name: "Lethal Flight", type: "Active", desc: "When thrown via Throw Team-mate, if an opposition player is Knocked Down upon landing, may apply +1 to their Armour or Injury Roll. If they suffer a Casualty, this player earns Star Player Points. Requires Right Stuff Trait." },
+  { category: "Devious", name: "Lone Fouler", type: "Active", desc: "When performing a Foul Action with no Offensive or Defensive Assists from either side, may re-roll a failed Armour Roll." },
+  { category: "Devious", name: "Pile Driver", type: "Active", desc: "When an opposition player is Knocked Down during a Block Action, may perform a free Foul Action if still Standing and Marking them, then is Placed Prone and activation ends." },
+  { category: "Devious", name: "Put the Boot In", type: "Active", desc: "Can provide Offensive Assists when a team-mate performs a Foul Action regardless of how many opposition players are Marking this player." },
+  { category: "Devious", name: "Quick Foul", type: "Active", desc: "Activation does not end after performing a Foul Action; may continue the Move Action with remaining movement." },
+  { category: "Devious", name: "Saboteur", type: "Active", desc: "When Knocked Down by a Block Action, before the Armour Roll, roll a D6: on 4+ the opposition is also Knocked Down (no Turnover unless they held the ball), and this player is automatically Knocked Out (no Armour Roll). Requires Secret Weapon Trait." },
+  { category: "Devious", name: "Shadowing", type: "Active", desc: "Each time an opposing player Dodges out of this player's Tackle Zone, roll a D6: on 4+ immediately move into the vacated square. Usable a number of times per Turn equal to MA. Only one Shadowing player may trigger per attempt." },
+  { category: "Devious", name: "Sneaky Git", type: "Active", desc: "Not Sent-off when Fouling if a natural double is rolled on the Armour Roll, provided the target's Armour is not broken. If armour breaks, still Sent-off." },
+  { category: "Devious", name: "Violent Innovator", type: "Active", desc: "If an opposition player suffers a Casualty from a Special Action this player performed, earn Star Player Points. Can only be taken if the player has a Trait that allows a Special Action." },
+
+  // GENERAL
+  { category: "General", name: "Block", type: "Active", desc: "May choose not to be Knocked Down when a Both Down result is applied during a Block Action they are part of." },
+  { category: "General", name: "Dauntless", type: "Active", desc: "When blocking an opponent with higher Strength, roll a D6 + own ST: if higher than the opponent's unmodified ST, match the opponent's ST for the Block. Must make separate rolls for each Block if Frenzy is involved." },
+  { category: "General", name: "Fend", type: "Active", desc: "When Pushed Back by a Block Action, the opposition player may not Follow-up. Cannot be used against a Ball & Chain Trait player or a Juggernaut player on a Blitz." },
+  { category: "General", name: "Frenzy*", type: "Active", desc: "Must Follow-up every Pushed Back target. If the target remains Standing after the push, must perform a second Block Action and Follow-up again. Second Block on a Blitz costs a movement square (must Rush if none left). Cannot have Grab, Hit & Run, or Multiple Block." },
+  { category: "General", name: "Kick", type: "Active", desc: "If nominated as the kicking player, the Coach may choose to have the kick Deviate only D3 squares instead of D6." },
+  { category: "General", name: "Pro", type: "Active", desc: "Once per activation, roll D6: on 3+ may re-roll one die (any single die, part of a multi-die roll, or a die pool). Cannot re-roll Armour, Injury, Casualty rolls or rolls not made during this player's activation. Once attempted, no other re-roll source can be used for that die." },
+  { category: "General", name: "Steady Footing", type: "Active", desc: "Whenever this player would be Knocked Down or Fall Over, roll a D6. On a 6, they don't; if during activation they may continue normally with no Turnover." },
+  { category: "General", name: "Strip Ball", type: "Active", desc: "When blocking a ball-carrier who is Pushed Back, the ball is dropped in the pushed square and bounces (before Prone if applicable)." },
+  { category: "General", name: "Sure Hands", type: "Active", desc: "May re-roll when attempting to pick up the ball (not for Secure the Ball). Strip Ball cannot be used against this player." },
+  { category: "General", name: "Tackle", type: "Active", desc: "Opposition players cannot use Dodge Skill when dodging out of this player's Tackle Zone. Also, when blocking, the target doesn't count as having Dodge for Stumble results." },
+  { category: "General", name: "Taunt", type: "Active", desc: "When Pushed Back by a Block Action, this player's Coach may make the opposition player Follow-up. Cannot be used against a Rooted Take Root player." },
+  { category: "General", name: "Wrestle", type: "Active", desc: "When both down result is applied in a Block Action this player is part of, may choose to use this Skill: both players are Placed Prone, ignoring any other Skills." },
+
+  // MUTATION
+  { category: "Mutation", name: "Big Hand", type: "Active", desc: "Ignores all negative modifiers when attempting to pick up the ball." },
+  { category: "Mutation", name: "Claws", type: "Passive", desc: "When an Armour Roll is made for an opponent Knocked Down by this player during a Block Action, any natural 8+ on the Armour Roll breaks the opponent's armour regardless of their Armour Value." },
+  { category: "Mutation", name: "Disturbing Presence*", type: "Passive", desc: "Any opposition player performing a Pass, Throw Team-mate, or Throw Bomb Action, or attempting to Intercept or Catch, applies a -1 modifier for each player with this Skill on your team within 3 squares." },
+  { category: "Mutation", name: "Extra Arms", type: "Active", desc: "Applies a +1 modifier to Agility Tests when attempting to Catch, Pick Up, or Intercept the ball." },
+  { category: "Mutation", name: "Foul Appearance*", type: "Passive", desc: "Before any dice are rolled for a Block or targeted Special Action against this player, the acting player must roll a D6: on 2+ the action proceeds; on 1 the action is cancelled and their activation immediately ends." },
+  { category: "Mutation", name: "Horns", type: "Active", desc: "When this player declares a Blitz Action, applies a +1 modifier to Strength for any Block Actions performed during that Blitz." },
+  { category: "Mutation", name: "Iron Hard Skin", type: "Passive", desc: "Opposition players cannot apply modifiers when making an Armour Roll against this player. Additionally, Claws cannot be used against them." },
+  { category: "Mutation", name: "Monstrous Mouth", type: "Active", desc: "Declare a Chomp Special Action (unlimited per turn): select a Marking Standing opponent and roll D6; on 3+ they are Chomped and cannot leave while being Marked. Can replace the Block in a Blitz. Strip Ball cannot be used against this player." },
+  { category: "Mutation", name: "Prehensile Tail", type: "Active", desc: "When an opponent attempts to Dodge, Jump, or Leap away from this player's Tackle Zone, they apply an additional -1 modifier to the Agility Test. Only one Prehensile Tail player may trigger per attempt." },
+  { category: "Mutation", name: "Tentacles", type: "Active", desc: "When an opponent tries to Dodge/Jump/Leap out of this player's Tackle Zone, roll D6 + ST − opponent ST: on 6+ or natural 6, they fail and activation ends; on 5− or natural 1, no effect. Only one Tentacle player may trigger per attempt." },
+  { category: "Mutation", name: "Two Heads", type: "Active", desc: "May apply a +1 modifier to the Agility Test whenever attempting to Dodge." },
+  { category: "Mutation", name: "Very Long Legs", type: "Active", desc: "Applies +1 to Agility Test when Leaping or Jumping, and +2 when Intercepting. Also ignores the Cloud Burster Skill." },
+
+  // PASSING
+  { category: "Passing", name: "Accurate", type: "Active", desc: "When performing a Pass Action that is a Quick Pass or Short Pass, may apply a +1 modifier to the Passing Ability Test." },
+  { category: "Passing", name: "Cannoneer", type: "Active", desc: "When performing a Pass Action that is a Long Pass or Long Bomb, may apply a +1 modifier to the Passing Ability Test." },
+  { category: "Passing", name: "Cloud Burster", type: "Active", desc: "When this player performs a Pass Action, opposition players may not attempt to Intercept the ball." },
+  { category: "Passing", name: "Dump-Off", type: "Active", desc: "When targeted by a Block or Special Action, may immediately perform a Quick Pass before the action is resolved. The pass cannot cause a Turnover." },
+  { category: "Passing", name: "Give and Go", type: "Active", desc: "If performing a Quick Pass or Hand-off without causing a Turnover, activation does not end; may continue moving with remaining movement." },
+  { category: "Passing", name: "Hail Mary Pass", type: "Active", desc: "May target any square on the pitch without using the Range Ruler, treated as a Long Bomb (Accurate counts as Inaccurate). Cannot be Intercepted." },
+  { category: "Passing", name: "Leader", type: "Passive", desc: "At the start of each half, if one or more players with this Skill are on pitch, the team gains one bonus Leader Re-roll. The re-roll is lost if all Leader Skill players leave play. Cannot be lost to Halfling Master Chef." },
+  { category: "Passing", name: "Nerves of Steel", type: "Active", desc: "May ignore all modifiers for being Marked when making an Agility Test to Catch, or a Passing Ability Test to Pass." },
+  { category: "Passing", name: "On the Ball", type: "Active", desc: "When an opponent performs a Pass Action, after the target square is declared, may move up to 3 squares (no Rush). Also, after a Kick Deviates during Start of Drive, a single Open player with this Skill may move up to 3 squares (no Rush, no entering opponent's half)." },
+  { category: "Passing", name: "Pass", type: "Active", desc: "May re-roll any failed Passing Ability Test when performing a Pass Action." },
+  { category: "Passing", name: "Punt", type: "Active", desc: "Declare a Punt Special Action (once per Turn): make a Move Action, then place the Throw-in Template and roll for direction and distance (D6 each). Kick Skill allows re-rolling either or both dice. Landing square player must Catch. No Turnover if ball lands on ground; Turnover if caught by opposition or goes in crowd." },
+  { category: "Passing", name: "Safe Pass", type: "Active", desc: "If rolling a natural 1 on a Passing Ability Test, it is not a Fumble. The player retains the ball and activation immediately ends. No Turnover." },
+
+  // STRENGTH
+  { category: "Strength", name: "Arm Bar", type: "Active", desc: "If an opposing player Falls Over attempting to Dodge/Leap/Jump out of this player's Tackle Zone, may apply +1 to their Armour or Injury Roll. If a Casualty results, this player earns Star Player Points. Only one Arm Bar player may trigger per attempt." },
+  { category: "Strength", name: "Brawler", type: "Active", desc: "When declaring a Block Action, may re-roll a single Both Down result." },
+  { category: "Strength", name: "Break Tackle", type: "Active", desc: "Once per Turn when attempting to Dodge: +1 Agility modifier at ST 3 or lower; +2 at ST 4; +3 at ST 5+." },
+  { category: "Strength", name: "Bullseye", type: "Active", desc: "When performing a Throw Team-mate Action that results in a Superb Throw, the thrown player does not Scatter and lands exactly in the target square. Requires Throw Team-mate Trait." },
+  { category: "Strength", name: "Grab", type: "Active", desc: "When blocking and Pushing Back the target, Coach may choose any adjacent unoccupied square for the push (if any exist). Also prevents the target from using Sidestep. Cannot have Frenzy." },
+  { category: "Strength", name: "Guard", type: "Active", desc: "Can provide Offensive and Defensive Assists when a player performs a Block Action regardless of how many opposition players are Marking this player." },
+  { category: "Strength", name: "Juggernaut", type: "Active", desc: "On a Blitz Action, may treat Any Both Down results as Pushed Back. Also, during Blitz Block Actions, opposition cannot use Fend, Stand Firm, or Wrestle." },
+  { category: "Strength", name: "Mighty Blow", type: "Active", desc: "Whenever this player Knocks Down an opponent during a Block Action (even if also Knocked Down), may apply +1 to either the Armour Roll or Injury Roll (even after rolling)." },
+  { category: "Strength", name: "Multiple Block", type: "Active", desc: "When declaring a Block Action, may target two different Marking opponents simultaneously, but reduces own ST by 2 for both Blocks. Both Blocks resolve simultaneously; no Follow-up allowed. Cannot have Frenzy." },
+  { category: "Strength", name: "Stand Firm", type: "Active", desc: "When Pushed Back during a Block Action (including Chain Pushes), may choose to remain in the current square instead. Does not prevent a Frenzy player from making a second Block if this player is still Standing." },
+  { category: "Strength", name: "Strong Arm", type: "Active", desc: "When performing a Throw Team-mate Action, may apply a +1 modifier to the Passing Ability Test. Requires Throw Team-mate Trait." },
+  { category: "Strength", name: "Thick Skull", type: "Passive", desc: "On an Injury Roll, is only Knocked Out on a 9 (8 = Stunned). With Stunty Trait: only KO'd on an 8 (7 = Stunned)." },
+
+  // TRAITS
+  { category: "Trait", name: "Always Hungry*", type: "Active", desc: "Before a Throw Team-mate Action, roll D6: on 2+ proceed normally. On 1, must roll again: on 2+ the thrown player escapes (auto-Fumble); on 1, the player is eaten—remove from Team Draft List permanently (no Apothecary/Regen). If they held the ball, it bounces. Turnover." },
+  { category: "Trait", name: "Animal Savagery*", type: "Passive", desc: "After declaring an action, roll D6 (+2 if Block/Blitz). On 4+, act normally. On 1–3, Knock Down an adjacent Standing team-mate (no Turnover unless they held ball). If no adjacent team-mate, become Distracted." },
+  { category: "Trait", name: "Animosity (X)*", type: "Active", desc: "When attempting to Pass or Hand-off to a team-mate with the keyword shown in brackets (or all team-mates for 'Animosity All'), roll D6: on 1 the action is refused and activation ends." },
+  { category: "Trait", name: "Ball & Chain*", type: "Active", desc: "Can only declare Ball & Chain Special Action. Place Throw-in Template and roll D6 each move (up to MA). Auto-passes Dodge; can't be Shadowed or Tentacled. Hits Standing players with an automatic Block; pushes Prone/Stunned. Ball bounces on contact. If Knocked Down/Fallen/Prone, immediately roll Injury (Stunned = KO)." },
+  { category: "Trait", name: "Bloodlust (X+)*", type: "Passive", desc: "After declaring action, roll D6 (+1 if Block/Blitz): if ≥ X, act normally. If lower or natural 1, may change to a Move Action; at end of activation must bite an adjacent Thrall Lineman (Injury Roll, Casualty = Badly Hurt). Failing 
